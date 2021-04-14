@@ -1,0 +1,35 @@
+prefix: market_baseline
+
+fp16: false
+
+#dataset
+batch_size: 128
+joint_training: false
+
+source_dataset: market
+target_dataset: market
+
+# architecture
+drop_last_stride: true
+
+# optimizer
+new_params_lr: 0.05
+ft_lr: 0.01
+optimizer_type: sgd
+num_epoch: 70
+lr_step: [50]
+
+
+
+# augmentation
+random_flip: true
+random_crop: true
+random_erase: true
+color_jitter: false
+padding: 10
+
+
+# log
+eval_interval: 10
+
+
