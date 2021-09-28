@@ -35,6 +35,14 @@ dataset_cfg.msmt.train = "train"
 dataset_cfg.msmt.query = "list_query.txt"
 dataset_cfg.msmt.gallery = "list_gallery.txt"
 
+dataset_cfg.personx = CfgNode()
+dataset_cfg.personx.num_id = 410
+dataset_cfg.personx.num_cam = 6
+dataset_cfg.personx.root = "/home/chuanchen_luo/data/PersonX"
+dataset_cfg.personx.train = "bounding_box_train"
+dataset_cfg.personx.query = "query"
+dataset_cfg.personx.gallery = "bounding_box_test"
+
 dataset_cfg.vehiclex = CfgNode()
 dataset_cfg.vehiclex.num_id = 1362
 dataset_cfg.vehiclex.num_cam = 11
