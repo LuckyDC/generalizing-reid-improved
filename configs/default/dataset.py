@@ -35,10 +35,22 @@ dataset_cfg.msmt.train = "train"
 dataset_cfg.msmt.query = "list_query.txt"
 dataset_cfg.msmt.gallery = "list_gallery.txt"
 
-dataset_cfg.personx = CfgNode()
-dataset_cfg.personx.num_id = 410
-dataset_cfg.personx.num_cam = 6
-dataset_cfg.personx.root = "/home/chuanchen_luo/data/PersonX"
-dataset_cfg.personx.train = "bounding_box_train"
-dataset_cfg.personx.query = "query"
-dataset_cfg.personx.gallery = "bounding_box_test"
+dataset_cfg.vehiclex = CfgNode()
+dataset_cfg.vehiclex.num_id = 1362
+dataset_cfg.vehiclex.num_cam = 11
+dataset_cfg.vehiclex.root = "/home/chuanchen_luo/data/AIC20_track2/AIC20_ReID_Simulation"
+dataset_cfg.vehiclex.train = "image_train"
+
+dataset_cfg.veri = CfgNode()
+dataset_cfg.veri.num_id = 576
+dataset_cfg.veri.num_cam = 20
+dataset_cfg.veri.root = "/home/chuanchen_luo/data/VeRi"
+dataset_cfg.veri.train = "image_train"
+dataset_cfg.veri.query = "image_query"
+dataset_cfg.veri.gallery = "image_test"
+
+dataset_cfg.vehicleid = CfgNode()
+dataset_cfg.vehicleid.num_id = 13164
+dataset_cfg.vehicleid.num_cam = 0
+dataset_cfg.vehicleid.root = "/home/chuanchen_luo/data/VehicleID_V1.0"
+dataset_cfg.vehicleid.train = "image_train"

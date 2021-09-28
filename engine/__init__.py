@@ -14,7 +14,7 @@ from utils.eval_cmc import eval_rank_list
 
 
 def get_trainer(model, optimizer, lr_scheduler=None, enable_amp=False, log_period=10, save_interval=10,
-                save_dir="checkpoints", prefix="model", query_loader=None, gallery_loader=None, eval_interval=None):
+                query_loader=None, gallery_loader=None, eval_interval=None):
     # Trainer
     trainer = create_train_engine(model, optimizer, enable_amp)
 
@@ -52,7 +52,7 @@ def get_trainer(model, optimizer, lr_scheduler=None, enable_amp=False, log_perio
             state_dict = model.module.state_dict() if dist.is_initialized() else model.state_dict()
             save_path = os.path.join(logx.logdir, 'checkpoint_ep{}.pt'.format(epoch))
             torch.save(state_dict, save_path)
-            logx.msg("Model saved at {}/{}_model_{}.pt".format(save_dir, prefix, epoch))
+            logx.msg("Model saved at {}".format(save_path))
 
         if evaluator and epoch % eval_interval == 0 and checkpoint_flag:
             torch.cuda.empty_cache()
@@ -95,6 +95,9 @@ def get_trainer(model, optimizer, lr_scheduler=None, enable_amp=False, log_perio
             for k in sorted(metric_dict.keys()):
                 msg += "\t%s: %.4f" % (k, metric_dict[k])
             logx.msg(msg)
+
+            if epoch > 5:
+                logx.metric('train', metric_dict, iteration)
 
             kv_metric.reset()
             timer.reset()

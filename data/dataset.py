@@ -27,7 +27,7 @@ class ImageFolder(Dataset):
             if root.lower().find("msmt") != -1:
                 cam_id = int(splits[2])
             else:
-                cam_id = int(splits[1][1])
+                cam_id = int(splits[1][1:]) if root.lower().find("ve") != -1 else int(splits[1][1])
 
             cam_ids.append(cam_id - 1)
 
@@ -155,6 +155,8 @@ class CrossDataset(Dataset):
         self.num_source_cams = len(set(source_dataset.cam_ids))
         self.num_target_cams = len(set(target_dataset.cam_ids))
 
+        self.num_source_id = source_dataset.num_id
+
     def __len__(self):
         return self.source_size + self.target_size
 
@@ -169,7 +171,6 @@ class CrossDataset(Dataset):
         else:
             idx = idx - self.source_size
             sample = self.target_dataset[idx]
-
             return sample
 
 

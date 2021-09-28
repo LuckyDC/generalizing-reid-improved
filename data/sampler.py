@@ -55,47 +55,26 @@ class CrossDatasetRandomSampler(Sampler):
         self.target_size = len(target_dataset)
 
     def __len__(self):
-        if self.source_size <= self.target_size:
-            return self.target_size * 2
-        else:
-            return self.source_size * 2
+        return self.target_size * 2
 
     def __iter__(self):
         perm = []
         half_bs = self.batch_size // 2
 
-        if self.source_size <= self.target_size:
-            multiplier = self.target_size // self.source_size
-            reminder = self.target_size % self.source_size
-
-            source_perm = [np.random.permutation(self.source_size) for _ in range(multiplier)]
-            source_perm = np.concatenate(source_perm, axis=0).tolist()
-            source_perm += np.random.randint(low=0, high=self.source_size, size=(reminder,), dtype=np.int64).tolist()
-
-            target_perm = np.random.permutation(self.target_size) + self.source_size
-            target_perm = target_perm.tolist()
-
-            for i in range(math.ceil(self.target_size / half_bs)):
-                perm.extend(source_perm[i * half_bs:(i + 1) * half_bs])
-                perm.extend(target_perm[i * half_bs:(i + 1) * half_bs])
-
+        source_perm = np.random.permutation(self.source_size)
+        if self.source_size >= self.target_size:
+            source_perm = source_perm[:self.target_size]
         else:
-            multiplier = self.source_size // self.target_size
-            reminder = self.source_size % self.target_size
+            pad = np.random.choice(source_perm, self.target_size - self.source_size, replace=False)
+            source_perm = np.concatenate([source_perm, pad])
+        source_perm = source_perm.tolist()
 
-            target_perm = [np.random.permutation(self.target_size) for _ in range(multiplier)]
-            target_perm = np.concatenate(target_perm, axis=0)
-            pad_perm = np.random.randint(low=0, high=self.target_size, size=(reminder,), dtype=np.int64)
-            target_perm = np.concatenate([target_perm, pad_perm], axis=0)
-            target_perm += self.source_size
-            target_perm = target_perm.tolist()
+        target_perm = np.random.permutation(self.target_size) + self.source_size
+        target_perm = target_perm.tolist()
 
-            source_perm = np.random.permutation(self.source_size)
-            source_perm = source_perm.tolist()
-
-            for i in range(math.ceil(self.source_size / half_bs)):
-                perm.extend(source_perm[i * half_bs:(i + 1) * half_bs])
-                perm.extend(target_perm[i * half_bs:(i + 1) * half_bs])
+        for i in range(math.ceil(self.target_size / half_bs)):
+            perm.extend(source_perm[i * half_bs:(i + 1) * half_bs])
+            perm.extend(target_perm[i * half_bs:(i + 1) * half_bs])
 
         return iter(perm)
 
@@ -131,55 +110,27 @@ class CrossDatasetDistributedSampler(Sampler):
         perm = []
         half_bs = self.batch_size // 2
 
-        if self.source_size <= self.target_size:
-            multiplier = self.target_size // self.source_size
-            reminder = self.target_size % self.source_size
-            pad = self.target_size % self.num_replicas
-
-            source_perm = [torch.randperm(self.source_size, generator=g) for _ in range(multiplier)]
-            source_perm = torch.cat(source_perm, dim=0).tolist()
-            source_perm += torch.randint(low=0, high=self.source_size, size=(reminder + pad,), generator=g).tolist()
-
-            target_perm = torch.randperm(self.target_size, generator=g)
-            pad_perm = torch.randint(low=0, high=self.target_size, size=(pad,), generator=g)
-            target_perm = torch.cat([target_perm, pad_perm])
-            target_perm += self.source_size
-            target_perm = target_perm.tolist()
-
-            for i in range(math.ceil(self.target_size / half_bs)):
-                perm.extend(source_perm[i * half_bs:(i + 1) * half_bs])
-                perm.extend(target_perm[i * half_bs:(i + 1) * half_bs])
-
+        source_perm = np.random.permutation(self.source_size)
+        if self.source_size >= self.target_size:
+            source_perm = source_perm[:self.target_size]
         else:
-            multiplier = self.source_size // self.target_size
-            reminder = self.source_size % self.target_size
-            pad = self.source_size % self.num_replicas
+            pad = np.random.choice(source_perm, self.target_size - self.source_size, replace=False)
+            source_perm = np.concatenate([source_perm, pad])
+        source_perm = source_perm.tolist()
 
-            target_perm = [torch.randperm(self.target_size, generator=g) for _ in range(multiplier)]
-            target_perm = torch.cat(target_perm, dim=0)
-            pad_perm = torch.randint(low=0, high=self.target_size, size=(reminder + pad,), generator=g)
-            target_perm = torch.cat([target_perm, pad_perm], dim=0)
-            target_perm += self.source_size
-            target_perm = target_perm.tolist()
+        target_perm = np.random.permutation(self.target_size) + self.source_size
+        target_perm = target_perm.tolist()
 
-            source_perm = torch.randperm(self.source_size, generator=g)
-            source_perm = source_perm.tolist()
-            source_perm += torch.randint(low=0, high=self.source_size, size=(pad,), generator=g).tolist()
+        for i in range(math.ceil(self.target_size / half_bs)):
+            perm.extend(source_perm[i * half_bs:(i + 1) * half_bs])
+            perm.extend(target_perm[i * half_bs:(i + 1) * half_bs])
 
-            for i in range(math.ceil(self.source_size / half_bs)):
-                perm.extend(source_perm[i * half_bs:(i + 1) * half_bs])
-                perm.extend(target_perm[i * half_bs:(i + 1) * half_bs])
-
-        # subsample
         perm = perm[self.rank::self.num_replicas]
 
         return iter(perm)
 
     def __len__(self):
-        if self.source_size <= self.target_size:
-            return int(np.round(self.target_size * 2 / self.num_replicas))
-        else:
-            return int(np.round(self.source_size * 2 / self.num_replicas))
+        return int(np.round(self.target_size * 2 / self.num_replicas))
 
     def set_epoch(self, epoch):
         self.epoch = epoch

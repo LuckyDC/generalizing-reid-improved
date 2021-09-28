@@ -55,7 +55,6 @@ def train(cfg):
 
     # Model
     num_classes = cfg.source.num_id
-    num_cam = cfg.source.num_cam + cfg.target.num_cam if cfg.joint_training else cfg.source.num_cam
     cam_ids = train_loader.dataset.target_dataset.cam_ids if cfg.joint_training else train_loader.dataset.cam_ids
     num_instances = len(train_loader.dataset.target_dataset) if cfg.joint_training else len(train_loader.dataset)
 
@@ -64,7 +63,6 @@ def train(cfg):
                   joint_training=cfg.joint_training,
                   num_instances=num_instances,
                   cam_ids=cam_ids,
-                  num_cam=num_cam,
                   neg_proto=cfg.neg_proto,
                   neighbor_mode=cfg.neighbor_mode,
                   neighbor_eps=cfg.neighbor_eps,
@@ -97,15 +95,12 @@ def train(cfg):
         model = parallel.DistributedDataParallel(model, device_ids=[dist.get_rank()])
 
     # Training engine
-    checkpoint_dir = os.path.join("checkpoints", cfg.source_dataset, cfg.prefix)
     engine = get_trainer(model=model,
                          optimizer=optimizer,
                          lr_scheduler=lr_scheduler,
                          enable_amp=cfg.fp16,
                          log_period=cfg.log_period,
                          save_interval=10,
-                         save_dir=checkpoint_dir,
-                         prefix=cfg.prefix,
                          eval_interval=cfg.eval_interval,
                          query_loader=query_loader,
                          gallery_loader=gallery_loader)
